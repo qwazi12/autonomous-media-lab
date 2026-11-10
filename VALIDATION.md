@@ -51,3 +51,14 @@ The build remains an experimental local studio. Supplying authorized representat
 ## v0.3.1 Gemini adapter validation
 
 158 Python tests pass. Eleven Gemini-focused mocked tests cover default denial, environment-name-only configuration, missing credentials, header-based key transmission, fixed endpoint, redacted uncertain failures, no retries, shared quota, JSON completion, invalid images, redirects and queue authorization/arguments. No Gemini network call, credential extraction or live Railway change was performed. The adapter is implemented but not live-verified; its request quota is not a currency cap.
+
+## v0.4 Codex, stress and adversarial evaluation
+
+- 193 Python test cases: 189 passed, 4 expected failures documenting known accuracy gaps. Three Node manifest tests passed. Python compileall passed. Ruff/Flake8/Pyflakes/Pylint are unavailable, so full lint was not run.
+- Eleven Codex mock tests cover ChatGPT-only auth, stripped secret/proxy environment, explicit quota, shared attempted-call count, sanitized errors, no retry, tool-disable flags, structured JSON, bounded images and cleanup.
+- Actual cloud CLI smoke failed before inference with app-server initialization/read-only-filesystem error. Mac CLI discovery found none in PATH or four known official/Homebrew locations. No real Codex model execution is validated.
+- Queue stress: 400 submissions -> 100 unique jobs, 12 concurrent workers, exactly-once claims and token fencing. Separate 100-expired-job and 100-artifact-corruption cases. All three stress tests passed five repeated runs (15/15, 6.655 seconds reported by worker). No provider requests or actual jobs executed by the concurrency stress test.
+- All five actual FFmpeg workflow integration renders passed in fresh v0.4 runs, with synthetic authored plans. This is end-to-end media plumbing, not model reasoning.
+- 21 adversarial accuracy probes: 17 passed; 4 expected failures expose unit changes, untagged future spoilers, semantic continuity contradictions and ambiguous speaker attribution. Numeric substring matching and explicit Anime episode filtering bugs were fixed.
+
+These are not a measured accuracy score for movie understanding. Human review remains mandatory. Semantic-provider execution, representative source samples, realistic long-film workloads and graphics-runtime rendering remain unverified.

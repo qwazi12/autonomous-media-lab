@@ -50,6 +50,10 @@ class AnimeWorker(MovieWorker):
     name='anime'
     def prepare(self,index,context):
         r=super().prepare(index,context);aliases=context.get('aliases',{})
+        episode=context.get('episode')
+        if episode is not None:
+            require_text(episode,'episode')
+            for scene in r['scenes']:scene['evidence']=[e for e in scene.get('evidence',[]) if e.get('episode',episode)==episode]
         if not isinstance(aliases,dict) or any(not isinstance(k,str) or not isinstance(v,str) for k,v in aliases.items()):raise WorkerError('aliases must map names to canonical names')
         snapshot=context.get('continuity_snapshot')
         if snapshot is not None:
@@ -94,7 +98,7 @@ class EducationalWorker(MovieWorker):
             # Detect novel numeric strings for review; this is not equation verification.
             allowed=' '.join(e['text'] for s in index['scenes'] if s['id'] in b['scene_ids'] for e in s.get('evidence',[]))
             for number in re.findall(r'\b\d+(?:[.,]\d+)*%?',b['narration']):
-                if number not in allowed:issues.append({'segment_id':b['id'],'severity':'review','reason':f'Numeric assertion {number} not found in cited evidence.'})
+                if number not in set(re.findall(r'\b\d+(?:[.,]\d+)*%?',allowed)):issues.append({'segment_id':b['id'],'severity':'review','reason':f'Numeric assertion {number} not found in cited evidence.'})
         issues.append({'severity':'review','reason':'Source URLs and claims need independent factual verification.'})
         return issues
 

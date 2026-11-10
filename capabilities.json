@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "experimental_local_v0.3.1",
+  "status": "experimental_local_v0.4",
   "workflows": [
     "movie",
     "tv",
@@ -46,7 +46,8 @@
     "openai_whisper_cli_adapter",
     "multi_frame_vision",
     "bounded_writer_critic_revision",
-    "gemini_json_multimodal_adapter"
+    "gemini_json_multimodal_adapter",
+    "chatgpt_authenticated_codex_cli_worker"
   ],
   "not_implemented": [
     "character_graph",
