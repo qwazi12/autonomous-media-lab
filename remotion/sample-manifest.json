@@ -1,0 +1,25 @@
+{
+  "title": "Local deterministic recap sample",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "clips": [
+    {
+      "startFrame": 0,
+      "durationFrames": 90,
+      "src": "sample.png",
+      "sourceStartFrame": 0,
+      "kind": "image",
+      "caption": "Local assets. Deterministic timeline.",
+      "panZoom": {
+        "fromScale": 1,
+        "toScale": 1.15,
+        "fromX": 0,
+        "toX": 2,
+        "fromY": 0,
+        "toY": 0
+      }
+    }
+  ],
+  "audio": []
+}
