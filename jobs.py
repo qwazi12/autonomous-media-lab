@@ -20,7 +20,7 @@ import uuid
 
 WORKFLOWS = ('movie', 'tv', 'anime', 'manhwa', 'educational')
 FIELDS = {'source', 'workflow', 'subtitles', 'plan', 'model', 'vision_model',
-          'audio_dir', 'context', 'asr_model', 'asr_engine', 'ocr', 'target_seconds', 'rights_confirmed'}
+          'audio_dir', 'context', 'asr_model', 'asr_engine', 'provider', 'key_env', 'remote_authorized', 'max_provider_calls', 'ocr', 'target_seconds', 'rights_confirmed'}
 
 
 def validate_spec(spec, base=None):
@@ -56,6 +56,12 @@ def validate_spec(spec, base=None):
                               or len(result[key]) > 200 or '\x00' in result[key]):
             raise ValueError(key + ' must be a nonempty model name')
     if result.get('asr_engine','whisper-cpp') not in ('whisper-cpp','openai-whisper'): raise ValueError('Invalid asr_engine')
+    if result.get('provider','ollama') not in ('ollama','gemini'):raise ValueError('Invalid provider')
+    if 'remote_authorized' in result and type(result['remote_authorized']) is not bool:raise ValueError('remote_authorized must be boolean')
+    if result.get('provider')=='gemini' and (result.get('remote_authorized') is not True or type(result.get('max_provider_calls')) is not int or not 1<=result['max_provider_calls']<=1000):raise ValueError('Explicit Gemini authorization and bounded request count required')
+    if 'key_env' in result:
+        import re
+        if not isinstance(result['key_env'],str) or not re.fullmatch(r'[A-Z_][A-Z0-9_]{0,99}',result['key_env']):raise ValueError('key_env must be an environment variable name')
     if 'ocr' in result and type(result['ocr']) is not bool: raise ValueError('ocr must be boolean')
     return result
 
@@ -177,10 +183,11 @@ def pipeline_command(job):
                '--source', spec['source'], '--output', job['output'],
                '--workflow', spec['workflow'], '--target-seconds', str(spec['target_seconds']),
                '--rights-confirmed']
-    for key in ('subtitles', 'plan', 'model', 'vision_model', 'audio_dir', 'context', 'asr_model', 'asr_engine'):
+    for key in ('subtitles', 'plan', 'model', 'vision_model', 'audio_dir', 'context', 'asr_model', 'asr_engine', 'provider', 'key_env', 'max_provider_calls'):
         if key in spec:
             # Equals syntax keeps even values beginning with '-' a single value.
-            command.append('--' + key.replace('_', '-') + '=' + spec[key])
+            command.append('--' + key.replace('_', '-') + '=' + str(spec[key]))
+    if spec.get('remote_authorized'):command.append('--remote-authorized')
     if spec.get('ocr'): command.append('--ocr')
     return command
 

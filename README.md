@@ -195,3 +195,11 @@ python review_decisions.py status RUN_DIR
 The UI is an offline decision-payload download, not an authenticated multiuser approval system. This build has no automatic publication path.
 
 Remaining external prerequisites for representative autonomous samples: authorized source assets plus a verified locally installed language/vision model. No paid provider is invoked. Existing synthetic samples demonstrate media plumbing only; they are not finished examples matching the requested channels.
+
+## v0.3.1: optional Gemini and dot-directed operation
+
+The Gemini adapter is implemented but **disabled by default and not live-tested**. It reads only the environment variable named by `--key-env` (default GEMINI_API_KEY); never place a key in a job JSON, command-line argument, source file or commit. No Railway configuration is changed by this application.
+
+After explicit authorization for the intended data transmission and spending, the operator can select `--provider gemini --model VERIFIED_MODEL --vision-model VERIFIED_MODEL --remote-authorized --max-provider-calls N`. The request limit is shared across analysis, vision, writing and critique within one process. It is **not a dollar budget** and is reset on a new process/run. Provider billing limits must be configured/verified separately before unattended use. Timeouts count as attempted requests and are not automatically retried. Errors omit provider payloads and secrets. Model availability/prices must be verified before use; no guessed model name is supplied as a default.
+
+For zero external-model API calls, dot can inspect the evidence and write an original plan following the documented JSON contract, then run `--plan original-plan.json`. This is a supervised artifact handoff. The standalone application cannot call dot autonomously; a chat subscription is not an API credential or unattended execution integration. Imported plans remain explicitly labeled and require review.

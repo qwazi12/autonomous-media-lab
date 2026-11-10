@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "experimental_local_v0.3",
+  "status": "experimental_local_v0.3.1",
   "workflows": [
     "movie",
     "tv",
@@ -45,7 +45,8 @@
     "remotion_renderer",
     "openai_whisper_cli_adapter",
     "multi_frame_vision",
-    "bounded_writer_critic_revision"
+    "bounded_writer_critic_revision",
+    "gemini_json_multimodal_adapter"
   ],
   "not_implemented": [
     "character_graph",
@@ -54,9 +55,9 @@
     "forced_alignment",
     "hyperframes_adapter",
     "heygen_adapter",
-    "cloud_provider_adapter",
     "publication",
-    "autonomous_semantic_season_state"
+    "autonomous_semantic_season_state",
+    "hard_currency_budget_enforcement"
   ],
   "sample_mode": "original_synthetic_assets_and_imported_hand_authored_plans",
   "paid_calls": 0,

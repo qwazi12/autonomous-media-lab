@@ -47,3 +47,7 @@ Installed OpenAI Whisper 20250625 with cached base.en.pt transcribed an original
 - Remotion has source and manifest tests only; no installed runtime/render validation. No HyperFrames/HeyGen/cloud service calls or publication.
 
 The build remains an experimental local studio. Supplying authorized representative assets and a verified local model is required before producing and reviewing autonomous, channel-style samples. Synthetic clips are integration proof, not substitutes for those samples.
+
+## v0.3.1 Gemini adapter validation
+
+158 Python tests pass. Eleven Gemini-focused mocked tests cover default denial, environment-name-only configuration, missing credentials, header-based key transmission, fixed endpoint, redacted uncertain failures, no retries, shared quota, JSON completion, invalid images, redirects and queue authorization/arguments. No Gemini network call, credential extraction or live Railway change was performed. The adapter is implemented but not live-verified; its request quota is not a currency cap.
