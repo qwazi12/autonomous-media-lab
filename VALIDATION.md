@@ -35,3 +35,15 @@ Final security regression suite: symlink/hardlink output source preservation, sa
 ## Mac OpenAI Whisper verification
 
 Installed OpenAI Whisper 20250625 with cached base.en.pt transcribed an original 3.193-second Samantha-voice fixture on CPU in 2.802 seconds. Exact recognized sentence: “The little blue robot carries a lantern through the quiet garden.” Input/model hashes were unchanged. No installation, download, paid call, private source media or live-project mutation. The actual CLI command contract was tested on the Mac; the adapter module has six cloud unit tests, and the complete pipeline has not yet been run on the Mac. See `validation/mac_whisper_smoke.json`. The initial default-voice speech fixture was only 5ms and yielded empty SRT, correctly not counted as a pass.
+
+## v0.3 validation (2026-11-10)
+
+- 147 Python unit/integration tests passed; 3 Node manifest tests passed.
+- All five workflows rendered MP4, SRT, EDL, acceptance reports and review artifacts in fresh integration runs.
+- Actual local research ingestion -> hash-verified lesson manifest -> educational FFmpeg MP4 path completed on an original, hand-authored fixture. Its visual is a storyboard plumbing fixture, not a representative scientific explainer.
+- Review decisions invalidate on artifact additions/removals/changes; linked metadata writes rejected.
+- Persistent continuity ledger tests cover idempotence, immutable records, exact quotation provenance, episode limits, alias conflicts and linked-file protections.
+- Temporal observation and bounded revision are contract-tested with deterministic fake model responses. No actual Ollama language/vision generation occurred because no local server/model was reachable. These tests do not establish semantic quality.
+- Remotion has source and manifest tests only; no installed runtime/render validation. No HyperFrames/HeyGen/cloud service calls or publication.
+
+The build remains an experimental local studio. Supplying authorized representative assets and a verified local model is required before producing and reviewing autonomous, channel-style samples. Synthetic clips are integration proof, not substitutes for those samples.

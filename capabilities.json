@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "experimental_first_stage",
+  "status": "experimental_local_v0.3",
   "workflows": [
     "movie",
     "tv",
@@ -28,7 +28,13 @@
     "black_silence_peak_duration_qa",
     "hash_verified_stage_checkpoints",
     "remotion_manifest_export",
-    "openai_whisper_cli_cpu_smoke_on_mac"
+    "openai_whisper_cli_cpu_smoke_on_mac",
+    "persistent_evidence_continuity_ledger",
+    "spoiler_bounded_continuity_context",
+    "local_research_provenance_ingest",
+    "exact_quote_grounding",
+    "artifact_hash_bound_review_decisions",
+    "measured_acceptance_report"
   ],
   "implemented_not_live_verified": [
     "ollama_vision",
@@ -37,10 +43,11 @@
     "ollama_critic",
     "whisper_cpp_asr",
     "remotion_renderer",
-    "openai_whisper_cli_adapter"
+    "openai_whisper_cli_adapter",
+    "multi_frame_vision",
+    "bounded_writer_critic_revision"
   ],
   "not_implemented": [
-    "season_continuity",
     "character_graph",
     "web_research",
     "claim_verification",
@@ -48,7 +55,8 @@
     "hyperframes_adapter",
     "heygen_adapter",
     "cloud_provider_adapter",
-    "publication"
+    "publication",
+    "autonomous_semantic_season_state"
   ],
   "sample_mode": "original_synthetic_assets_and_imported_hand_authored_plans",
   "paid_calls": 0,

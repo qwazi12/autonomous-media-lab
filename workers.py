@@ -34,6 +34,11 @@ class TVWorker(MovieWorker):
             # Evidence explicitly tagged to another episode cannot enter this recap.
             for scene in r['scenes']:
                 scene['evidence']=[e for e in scene.get('evidence',[]) if e.get('episode',episode)==episode]
+        snapshot=context.get('continuity_snapshot')
+        if snapshot is not None:
+            if not isinstance(snapshot,dict) or type(context.get('episode_position')) is not int or type(snapshot.get('through_position')) is not int or snapshot['through_position']>=context['episode_position']:raise WorkerError('Continuity snapshot must end before current episode position')
+            if any(e.get('position',context['episode_position'])>snapshot['through_position'] for e in snapshot.get('episodes',[])):raise WorkerError('Continuity snapshot contains future episode evidence')
+            r['workflow_context']['continuity_snapshot']=snapshot
         r['workflow_context'].update({'episode':episode,'prior_continuity':context.get('prior_continuity',[]),'spoiler_boundary':context.get('spoiler_boundary',episode),'continuity_verified':False})
         return r
     def inspect(self,plan,index,context):
@@ -46,6 +51,11 @@ class AnimeWorker(MovieWorker):
     def prepare(self,index,context):
         r=super().prepare(index,context);aliases=context.get('aliases',{})
         if not isinstance(aliases,dict) or any(not isinstance(k,str) or not isinstance(v,str) for k,v in aliases.items()):raise WorkerError('aliases must map names to canonical names')
+        snapshot=context.get('continuity_snapshot')
+        if snapshot is not None:
+            if type(context.get('episode_position')) is not int or not isinstance(snapshot,dict) or type(snapshot.get('through_position')) is not int or snapshot['through_position']>=context['episode_position']:raise WorkerError('Anime continuity must end before current episode')
+            if any(e.get('position',context['episode_position'])>snapshot['through_position'] for e in snapshot.get('episodes',[])):raise WorkerError('Anime continuity contains future episode evidence')
+            r['workflow_context']['continuity_snapshot']=snapshot
         r['workflow_context'].update({'aliases':aliases,'pronunciations':context.get('pronunciations',{}),'identity_verified':False})
         # Preserve exact original evidence and add annotations instead of rewriting it.
         for s in r['scenes']:

@@ -54,6 +54,17 @@ class PipelineTests(unittest.TestCase):
             def generate(self,*a):return responses.pop(0)
         plan=p.make_plan(self.index,Fake(),'movie',360)
         self.assertEqual(plan['generator'],'local_ollama');self.assertEqual(plan['critic']['issues'],[])
+    def test_bounded_revision(self):
+        responses=[{'notes':[{'scene_id':'S00001','facts':['A signal.']}]},copy.deepcopy(self.plan),{'issues':[{'segment_id':'B001','reason':'unsupported adjective'}]},copy.deepcopy(self.plan),{'issues':[]}]
+        class Fake:
+            model='fixture'
+            def generate(self,*a):return responses.pop(0)
+        plan=p.make_plan(self.index,Fake(),'movie',360)
+        self.assertEqual(len(plan['revision_history']),1)
+        self.assertFalse(responses)
+    def test_critic_reference_required(self):
+        with self.assertRaises(p.PipelineError):p.validate_critic({'issues':[{'segment_id':'bad','reason':'x'}]},self.plan)
+        with self.assertRaises(p.PipelineError):p.validate_critic({'issues':['everything fine']},self.plan)
     def test_model_prompt_bound(self):
         with self.assertRaisesRegex(p.PipelineError,'context'):
             p.LocalModel('fixture').generate('x'*60001)

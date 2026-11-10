@@ -62,7 +62,7 @@ To use higher-quality recordings, pass `--audio-dir narration/` containing one W
 
 ### Movie, TV and anime
 
-Use `--workflow movie`, `tv` or `anime` with local video and optional SRT. These share the same implemented cut/evidence/render path. Separate deterministic workers specialize these paths: TV filters evidence tagged to other episodes; anime annotates source-name aliases without rewriting evidence; movie checks source-order regressions. Their model instructions specialize causal plot, episode boundaries or alias/vision ambiguity respectively. **They are not yet fully distinct semantic engines**: persistent season continuity, automated alias tracking, ASR and multi-frame temporal reasoning remain future work.
+Use `--workflow movie`, `tv` or `anime` with local video and optional SRT. These share the same implemented cut/evidence/render path. Separate deterministic workers specialize these paths: TV filters evidence tagged to other episodes; anime annotates source-name aliases without rewriting evidence; movie checks source-order regressions. Their model instructions specialize causal plot, episode boundaries or alias/vision ambiguity respectively. **They are not yet fully distinct semantic engines**: a reviewed persistent continuity ledger and sparse multi-frame observation are available in v0.3, but autonomous season-state inference and alias discovery remain unimplemented.
 
 ### Manhwa
 
@@ -160,3 +160,38 @@ python pipeline.py --workflow movie --source authorized-film.mp4 --asr-engine op
 The wrapper extracts a restricted local WAV first, writes SRT exclusively, and preserves input files. Six unit tests cover missing executables/weights, no fallback, overwrite refusal, invocation and validation. Local ASR only supplies dialogue evidence; it does not replace visual understanding or story verification.
 
 Verified on the connected Apple M4 Mac: installed OpenAI Whisper 20250625 and cached base.en.pt transcribed an original 3.19-second speech fixture correctly in 2.80 seconds on CPU. No download/install was needed. This verifies the CLI invocation; full pipeline-on-Mac and long-film accuracy/performance remain untested. For macOS test fixtures, explicitly selecting the installed Samantha voice worked; the default voice returned a nearly empty audio file despite exit 0.
+
+## v0.3: evidence, continuity and review completion
+
+New implementation:
+- Vision now samples three chronologically ordered frames per detected interval. Each model observation carries a frame time and evidence ID. This is sparse observation, not continuous video understanding.
+- Analyst/writer/critic performs at most one evidence-grounded correction and a second critique. Unsupported material can still survive model review; no approval is inferred.
+- Every draft writes `acceptance.json`: source evidence presence, requested-duration tolerance, freeze-padding warnings, workflow findings, multimodal coverage and mandatory human editorial review.
+- `doctor.py --model NAME --vision-model NAME` checks local tools and installed Ollama model names without downloading or starting anything.
+- `review_decisions.py` persists human review decisions against hashes of all run artifacts. Any added, removed or changed artifact invalidates the decision. Each finished run creates `.review/decision.html`, which exports a JSON payload for explicit CLI import. Approval never authorizes publication.
+
+### Persistent episode continuity
+
+`continuity.py --db continuity.sqlite --series SERIES record episode.json` records explicit operator-reviewed facts and aliases with exact source-evidence quotations and a source hash. Records are immutable/idempotent. A source hash must be verified against the actual media by the caller. `context --through-position N` returns only episodes through that position, including unresolved conflicts.
+
+Place that exported object in your `--context` JSON as `continuity_snapshot`, alongside `episode_position` and `episode`. TV/anime workers reject snapshots reaching the current/future episode. They include prior source evidence in analyst context without automatically resolving contradictory identities or events. The ledger does not autonomously discover true character state.
+
+### Research-backed educational inputs
+
+`research.py ingest sources.json corpus.json` ingests explicitly supplied local HTML/text/Markdown or document-extract JSON. Each source specifies `path`, `url`, `accessed_on` and optionally title/publication date. The corpus contains source hashes and sentence evidence IDs. No URL is fetched. `research.py validate corpus.json claims.json report.json --recheck-files` verifies citations and exact extracted quotations. Paraphrases require human review; correspondence with text is not proof of truth.
+
+`prepare_lesson.py` connects a corpus and operator-authored image cards to the educational pipeline. Use `--help` for its input/output contract. Images and descriptions remain operator supplied; the tool does not falsely claim generated diagrams or independent research.
+
+### Recording review
+
+After watching and checking the complete output, a human may use:
+
+```sh
+python review_decisions.py export-ui RUN_DIR
+python review_decisions.py import RUN_DIR decision.json --attest-reviewed
+python review_decisions.py status RUN_DIR
+```
+
+The UI is an offline decision-payload download, not an authenticated multiuser approval system. This build has no automatic publication path.
+
+Remaining external prerequisites for representative autonomous samples: authorized source assets plus a verified locally installed language/vision model. No paid provider is invoked. Existing synthetic samples demonstrate media plumbing only; they are not finished examples matching the requested channels.
