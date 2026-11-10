@@ -63,6 +63,20 @@ def _metadata(root):
     return directory
 
 
+def _require_no_acceptance_blockers(root: Path) -> None:
+    acceptance = Path(root).resolve() / 'acceptance.json'
+    if not acceptance.exists():
+        return  # Older exports have no acceptance artifact.
+    try:
+        report = json.loads(acceptance.read_text(encoding='utf-8'))
+    except (OSError, ValueError) as exc:
+        raise ValueError('Approval blocked: acceptance.json cannot be read as valid JSON. Regenerate the draft acceptance report.') from exc
+    if not isinstance(report, dict) or not isinstance(report.get('blocking_issues', []), list):
+        raise ValueError('Approval blocked: invalid acceptance.json blocking_issues. Regenerate the draft acceptance report.')
+    if report.get('blocking_issues'):
+        raise ValueError('Approval blocked by unresolved acceptance issues. Resolve the source metadata, provenance, or ambiguities and generate a new draft. Blanket approval cannot override these blockers; reject or request_changes is allowed.')
+
+
 def record_decision(root: Path, decision: str, reviewer: str, notes: str = '', *, attest_reviewed: bool = False, expected_snapshot: dict | None = None) -> dict:
     if decision not in DECISIONS:
         raise ValueError('Decision must be approve, reject, or request_changes')
@@ -73,6 +87,8 @@ def record_decision(root: Path, decision: str, reviewer: str, notes: str = '', *
     if attest_reviewed is not True:
         raise ValueError('Explicit human review attestation is required; do not auto-approve')
     current = snapshot(root)
+    if decision == 'approve':
+        _require_no_acceptance_blockers(root)
     if expected_snapshot is not None and current != expected_snapshot:
         raise ValueError('Artifacts differ from the reviewed snapshot. Review the current files again.')
     record = {'schema_version': 1, 'decision': decision, 'reviewer': reviewer.strip(), 'notes': notes,
@@ -88,6 +104,8 @@ def record_decision(root: Path, decision: str, reviewer: str, notes: str = '', *
         # Rehash before committing so common concurrent edits fail closed.
         if snapshot(root) != current:
             raise ValueError('Artifacts changed before saving the review decision')
+        if decision == 'approve':
+            _require_no_acceptance_blockers(root)
         cursor = connection.execute('INSERT INTO decisions(record) VALUES (?)', (json.dumps(record, ensure_ascii=False),))
         record['id'] = cursor.lastrowid
     return record
@@ -118,6 +136,11 @@ def review_status(root: Path) -> dict:
         current = snapshot(root)
     except (ValueError, OSError) as exc:
         return {'status': 'invalidated', 'valid': False, 'decision': record, 'reason': str(exc)}
+    if record.get('decision') == 'approve':
+        try:
+            _require_no_acceptance_blockers(root)
+        except ValueError as exc:
+            return {'status': 'invalidated', 'valid': False, 'decision': record, 'reason': str(exc)}
     old = record['snapshot']['files']
     new = current['files']
     changed = sorted(name for name in old.keys() | new.keys() if old.get(name) != new.get(name))
@@ -143,6 +166,7 @@ def export_decision_ui(root: Path) -> Path:
 <style>body{font:17px/1.6 system-ui;background:#111b2b;color:#edf3fc;max-width:760px;margin:40px auto;padding:20px}a{color:#7dd9cc}label{display:block;margin:18px 0}input:not([type=checkbox]),textarea,select,button{box-sizing:border-box;width:100%;padding:12px;font:inherit}textarea{min-height:120px}.warning{color:#ffd395}button{cursor:pointer}</style>
 <h1>Draft review decision</h1><p class="warning">Human review required. This page exports a decision payload; it does not save approval, verify factual accuracy, or authorize publication.</p>
 <p><a href="../review.html">Open evidence review</a> · <a href="../draft.mp4">Open draft video</a></p>
+<p class="warning">Acceptance blockers cannot be overridden by blanket approval. Resolve source metadata, provenance, or ambiguities and generate a new draft before approving. Reject and request changes remain available.</p>
 <p>Review the draft and evidence before choosing a decision. If any artifact changes after this page was generated, generate a fresh page and review again.</p>
 <form id="form"><label>Reviewer name<input id="reviewer" required maxlength="300"></label><label>Decision<select id="decision"><option value="request_changes">Request changes</option><option value="reject">Reject</option><option value="approve">Approve</option></select></label><label>Review notes<textarea id="notes"></textarea></label><label><input type="checkbox" id="attest" required> I reviewed these artifacts and intend to record this decision.</label><button>Download decision payload</button></form>
 <p>Save the download outside the artifact directory. Then import it using review_decisions.py import ROOT PAYLOAD --attest-reviewed. Nothing is uploaded.</p><p id="status" role="status"></p>

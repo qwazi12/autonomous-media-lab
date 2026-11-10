@@ -202,7 +202,7 @@ def execute(args):
     if args.audio_dir: inputs.extend(sorted(Path(args.audio_dir).resolve().glob('*.wav')))
     if any(p.resolve().is_relative_to(out) for p in inputs): raise PipelineError('Input assets must stay outside the output run directory')
     spec={k:v for k,v in vars(args).items() if k not in ('resume','output')}
-    spec['engine_version']='0.4'
+    spec['engine_version']='0.4.1'
     out.mkdir(parents=True,exist_ok=True)
     if any(p.is_symlink() or (p.is_file() and p.stat().st_nlink>1) for p in out.rglob('*')): raise PipelineError('Run directory contains symlinks or hardlinks; refusing unsafe output reuse')
     checkpoint=Checkpoints(out,signature(spec,inputs),resume=args.resume)
@@ -251,10 +251,16 @@ def execute(args):
                         subtitles=transcribe_video(source,transcript,Path(args.asr_model))
                         checkpoint.record('transcript',[transcript])
                 index=index_video(source,out,subtitles)
-            index=worker.prepare(index,context)
             if args.vision_model:
                 from temporal import enrich_temporal
                 enrich_temporal(index,out,model_for(args.vision_model),video,ff)
+            assignment=context.get('source_episode_assignment')
+            if assignment is not None and args.workflow in ('tv','anime'):
+                if not isinstance(assignment,dict) or assignment.get('source_sha256')!=index['source_hash'] or assignment.get('episode')!=context.get('episode') or not assignment.get('episode'):raise PipelineError('Episode assignment must match actual source hash and requested episode')
+                for scene in index['scenes']:
+                    scene['episode']=assignment['episode']
+                    for item in scene.get('evidence',[]):item['episode']=assignment['episode']
+            index=worker.prepare(index,context)
             save(out/'index.json',index)
             files=[out/'index.json',*sorted((out/'frames').glob('*.jpg'))]
             if video!=source: files.append(video)
@@ -290,7 +296,7 @@ def execute(args):
         from acceptance import evaluate
         acceptance=evaluate(index,plan,qa,args.target_seconds,args.workflow)
         save(out/'acceptance.json',acceptance)
-        qa['acceptance']=acceptance;save(out/'qa.json',qa)
+        qa['acceptance']=acceptance;qa['status']=acceptance['status'];save(out/'qa.json',qa)
         from review import write_review
         write_review(out/'review.html',index,plan,qa)
         ledger['steps']+=['rendered','review_ready'];ledger['status']='draft_complete';ledger['duration_seconds']=render.probe(out/'draft.mp4','video')

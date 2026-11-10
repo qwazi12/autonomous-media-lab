@@ -2,6 +2,7 @@
 Models remain creative assistants; these workers enforce format-specific contracts.
 """
 import copy,re
+from evidence_guards import filter_episode,inspect_guards,apply_resolutions
 
 class WorkerError(ValueError):pass
 
@@ -22,12 +23,16 @@ class MovieWorker:
             if min(r['start'] for r in refs)<last:findings.append({'segment_id':b['id'],'severity':'review','reason':'Source order moves backward; verify flashback or deliberate editorial jump.'})
             last=max(r['end'] for r in refs)
             if not any(r.get('evidence') or r.get('visual_description') for r in refs):findings.append({'segment_id':b['id'],'severity':'review','reason':'No textual or vision observations support the cited scene; inspect footage.'})
+        guarded=inspect_guards(plan,index,context,self.name)+copy.deepcopy(index.get('provenance_findings',[]))
+        for finding in guarded:finding['reviewed_draft']=[{'id':b.get('id'),'narration':b.get('narration'),'scene_ids':b.get('scene_ids')} for b in plan['segments']]
+        findings.extend(apply_resolutions(guarded,context))
         return findings
 
 class TVWorker(MovieWorker):
     name='tv'
     def prepare(self,index,context):
         r=super().prepare(index,context)
+        r,provenance=filter_episode(r,context);r['provenance_findings']=provenance
         episode=context.get('episode')
         if episode is not None:
             require_text(episode,'episode')
@@ -50,6 +55,7 @@ class AnimeWorker(MovieWorker):
     name='anime'
     def prepare(self,index,context):
         r=super().prepare(index,context);aliases=context.get('aliases',{})
+        r,provenance=filter_episode(r,context);r['provenance_findings']=provenance
         episode=context.get('episode')
         if episode is not None:
             require_text(episode,'episode')
@@ -98,7 +104,7 @@ class EducationalWorker(MovieWorker):
             # Detect novel numeric strings for review; this is not equation verification.
             allowed=' '.join(e['text'] for s in index['scenes'] if s['id'] in b['scene_ids'] for e in s.get('evidence',[]))
             for number in re.findall(r'\b\d+(?:[.,]\d+)*%?',b['narration']):
-                if number not in set(re.findall(r'\b\d+(?:[.,]\d+)*%?',allowed)):issues.append({'segment_id':b['id'],'severity':'review','reason':f'Numeric assertion {number} not found in cited evidence.'})
+                if number not in set(re.findall(r'\b\d+(?:[.,]\d+)*%?',allowed)):issues.insert(0,{'segment_id':b['id'],'severity':'review','reason':f'Numeric assertion {number} not found in cited evidence.'})
         issues.append({'severity':'review','reason':'Source URLs and claims need independent factual verification.'})
         return issues
 

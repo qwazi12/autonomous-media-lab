@@ -62,3 +62,9 @@ The build remains an experimental local studio. Supplying authorized representat
 - 21 adversarial accuracy probes: 17 passed; 4 expected failures expose unit changes, untagged future spoilers, semantic continuity contradictions and ambiguous speaker attribution. Numeric substring matching and explicit Anime episode filtering bugs were fixed.
 
 These are not a measured accuracy score for movie understanding. Human review remains mandatory. Semantic-provider execution, representative source samples, realistic long-film workloads and graphics-runtime rendering remain unverified.
+
+## v0.4.1 uncertainty containment
+
+217 Python tests pass with no expected failures; 3 Node tests and compileall pass. The earlier four expected failures now pass because unknown provenance is withheld and quantities, explicit speaker ambiguity, and continuity comparisons require review. This is fail-closed uncertainty handling, not proof of semantic detection. Targeted resolutions bind exact evidence plus draft narration/references; stale, duplicated, blanket and unattested resolutions fail closed. Acceptance blockers prohibit approval while still permitting inspectable draft renders and rejection/change requests.
+
+No new real-world source fixtures or successful model-runtime tests are claimed. Runtime initialization failed before inference; no secrets were copied and no restrictions bypassed. Conventional lint remains unavailable pending an authorized official-package installation or existing executable.

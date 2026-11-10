@@ -213,3 +213,15 @@ This is a trusted personal-worker integration, not a guarantee that arbitrary ho
 **Runtime validation blocker:** the build computer has Codex CLI 0.167.0-alpha.4 and reports ChatGPT login, but the harmless JSON smoke failed before inference because its in-process app-server could not initialize on a read-only filesystem. The Mac had no CLI on PATH or at the checked official/Homebrew locations. No unattended or semantic execution is claimed. No Codex installation, new login, credential copy, API key usage or paid API call was performed.
 
 For a usable existing runtime, enqueue a job with provider `codex`, model/vision_model `default`, codex_authorized true and a bounded max_provider_calls value. Source rights and review requirements remain unchanged. Gemini stays optional, disabled without its separate authorization.
+
+## v0.4.1: fail-closed evidence uncertainty
+
+Previously documented accuracy gaps now trigger conservative blockers instead of passing silently:
+- TV/anime evidence without an explicit matching episode tag is withheld from generation. Unscoped visual and temporal observations are also withheld. To identify an entire source explicitly, operator context may contain `source_episode_assignment: {episode, source_sha256}` matching the actual source hash and requested episode. This is an operator assertion, not independent verification.
+- Narrated numbers and their associated units must match cited text; conversions require review rather than being guessed.
+- Prior continuity triggers an UNKNOWN consistency-comparison blocker. The tool does not claim it can detect arbitrary semantic contradictions.
+- Explicit speaker-ambiguity metadata/text triggers a blocker; unexpressed ambiguity may still escape these rules.
+
+Draft rendering remains available for inspection, but `acceptance.json` reports blockers and review approval refuses them. Correct source metadata or narration and produce a new draft. For an issue that genuinely requires human comparison, operator-supplied `evidence_guard_resolutions` entries can name the exact `finding_sha256`, reviewer, rationale and `reviewed: true`. These are specific evidence-and-draft-bound attestations, never automatic/blanket approvals or claims of truth. A changed draft/evidence invalidates the matching resolution. Models/extracted source text must never supply these operator decisions.
+
+This is uncertainty containment, not a semantic accuracy certificate. Authored fixtures remain synthetic; no new representative film/chapter assets have been supplied. Codex runtime and conventional-linter availability blockers remain unchanged.

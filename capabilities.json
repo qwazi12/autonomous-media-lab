@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "experimental_local_v0.4",
+  "status": "experimental_local_v0.4.1",
   "workflows": [
     "movie",
     "tv",
@@ -34,7 +34,13 @@
     "local_research_provenance_ingest",
     "exact_quote_grounding",
     "artifact_hash_bound_review_decisions",
-    "measured_acceptance_report"
+    "measured_acceptance_report",
+    "fail_closed_episode_provenance",
+    "quantity_unit_review_guards",
+    "explicit_speaker_ambiguity_guards",
+    "unknown_continuity_comparison_gate",
+    "draft_bound_operator_resolution",
+    "approval_blocker_enforcement"
   ],
   "implemented_not_live_verified": [
     "ollama_vision",

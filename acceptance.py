@@ -1,5 +1,4 @@
 """Evidence coverage and measurable draft acceptance, never automatic legal approval."""
-import re
 
 def evaluate(index,plan,qa,target_seconds,workflow):
     checks=[]
@@ -22,5 +21,8 @@ def evaluate(index,plan,qa,target_seconds,workflow):
         absent=[s['id'] for s in scenes.values() if not s.get('temporal_observations')]
         add('multimodal_coverage',not absent,{'scenes_without_temporal_observations':absent,'sampling_does_not_prove_completeness':True})
     add('human_editorial_review',False,{'requirement':'A reviewer must verify story, visual matches, pronunciation, rights and quality against the actual output.'})
-    return {'schema_version':1,'status':'human_review_required','checks':checks,'ready_to_publish':False,
+    blockers=[f for f in findings if isinstance(f,dict) and f.get('severity')=='blocking']
+    blockers += [{'code':'missing_source_evidence','segment_id':sid,'reason':'Cited scenes have no source observations.'} for sid in missing]
+    blockers += [{'code':'unresolved_critic_finding','finding':issue} for issue in issues]
+    return {'schema_version':1,'status':'blocked' if blockers else 'human_review_required','blocking_issues':blockers,'checks':checks,'ready_to_publish':False,
       'limitations':['Structural references do not prove semantic support.','No copyright or publication authorization is inferred.']}

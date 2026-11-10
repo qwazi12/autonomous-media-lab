@@ -1,9 +1,9 @@
 """Deterministic adversarial accuracy probes; no provider/network calls.
 
 Run: python -m unittest test_accuracy_eval -v
-Passing tests demonstrate narrow checks, not semantic accuracy. expectedFailure
-cases document desired protections absent at writing time. An unexpected success
-means the protection may have improved: remove that marker after reviewing it.
+Passing tests demonstrate narrow checks, not semantic accuracy. Previously
+uncontained gaps now produce conservative review blockers or withheld evidence;
+these results do not establish automatic semantic understanding.
 Fixtures are authored/synthetic, not a measured real-world benchmark.
 """
 import copy
@@ -29,7 +29,7 @@ def plan(text='The survey counted 20 birds.', refs=None):
 
 def numeric_flags(draft, source):
     return [finding for finding in EducationalWorker().inspect(draft, source, {})
-            if 'Numeric assertion' in finding['reason']]
+            if 'Numeric assertion' in finding['reason'] or finding.get('code') in ('quantity_unit_mismatch','unsupported_numeric_token')]
 
 
 class ExtractiveGroundingAccuracyTests(unittest.TestCase):
@@ -114,8 +114,7 @@ class StructuralAndNumericAccuracyTests(unittest.TestCase):
         # Desired behavior: "2" must not be supported merely by "20".
         self.assertTrue(numeric_flags(plan('The survey counted 2 birds.'), index()))
 
-    @unittest.expectedFailure
-    def test_gap_numeric_unit_change_false_negative(self):
+    def test_unit_change_is_blocked_for_review(self):
         self.assertTrue(numeric_flags(plan('The distance was 12 miles.'), index('The distance was 12 km.')))
 
     def test_backward_scene_order_requests_review(self):
@@ -155,22 +154,19 @@ class ContinuityAndSpeakerAccuracyTests(unittest.TestCase):
         prepared = AnimeWorker().prepare(index(episode='two'), {'episode': 'one'})
         self.assertEqual(prepared['scenes'][0]['evidence'], [])
 
-    @unittest.expectedFailure
-    def test_gap_untagged_future_spoiler_cannot_be_detected(self):
+    def test_untagged_evidence_is_withheld_without_semantic_inference(self):
         source = index('In the next episode, Mira is revealed as the culprit.')
         source['scenes'][0]['evidence'][0].pop('episode')
         prepared = TVWorker().prepare(source, {'episode': 'one'})
         self.assertEqual(prepared['scenes'][0]['evidence'], [])
 
-    @unittest.expectedFailure
-    def test_gap_contradictory_continuity_is_not_semantically_detected(self):
+    def test_continuity_comparison_unknown_is_blocked(self):
         source = index('Mira is alive in the current scene.')
         context = {'episode': 'one', 'prior_continuity': ['Mira is alive.']}
         findings = TVWorker().inspect(plan('Mira died before this scene.'), source, context)
         self.assertTrue(any('contradict' in x['reason'].lower() for x in findings))
 
-    @unittest.expectedFailure
-    def test_gap_ambiguous_speaker_is_not_semantically_detected(self):
+    def test_explicit_speaker_ambiguity_is_blocked(self):
         source = index('A speech bubble says "Run!"; speaker could be Mira or Ren.')
         findings = AnimeWorker().inspect(plan('Mira shouts "Run!".'), source, {})
         self.assertTrue(any('speaker' in x['reason'].lower() or 'ambig' in x['reason'].lower() for x in findings))

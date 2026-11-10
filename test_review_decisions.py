@@ -122,6 +122,39 @@ class ReviewDecisionTests(unittest.TestCase):
             export_decision_ui(self.root)
         self.assertEqual(original_html.read_text(), 'Original source document')
 
+    def test_acceptance_blockers_refuse_approval_but_allow_other_decisions(self):
+        acceptance = self.root / 'acceptance.json'
+        acceptance.write_text(json.dumps({'blocking_issues': [{'reason': 'Unresolved source provenance'}]}))
+        with self.assertRaisesRegex(ValueError, 'Blanket approval cannot override'):
+            self.record('approve')
+        self.assertFalse((self.root / '.review/decisions.sqlite').exists())
+        for decision in ('reject', 'request_changes'):
+            self.record(decision)
+            self.assertEqual(review_status(self.root)['status'], decision)
+        payload = {'schema_version': 1, 'snapshot': snapshot(self.root), 'reviewer': 'Tester', 'decision': 'approve'}
+        with self.assertRaisesRegex(ValueError, 'Approval blocked'):
+            import_decision(self.root, payload, attest_reviewed=True)
+        acceptance.write_text(json.dumps({'blocking_issues': []}))
+        self.assertEqual(review_status(self.root)['status'], 'invalidated')
+        self.record('approve')
+        self.assertEqual(review_status(self.root)['status'], 'approve')
+
+    def test_malformed_acceptance_fails_closed_for_approval(self):
+        for report in ['not json', '[]', '{"blocking_issues": null}', '{"blocking_issues": "unresolved"}']:
+            (self.root / 'acceptance.json').write_text(report)
+            with self.assertRaisesRegex(ValueError, 'Approval blocked'):
+                self.record('approve')
+            self.record('request_changes')
+            self.assertEqual(review_status(self.root)['status'], 'request_changes')
+
+    def test_new_acceptance_blockers_invalidate_prior_approval(self):
+        self.record('approve')
+        (self.root / 'acceptance.json').write_text(json.dumps({'blocking_issues': ['Unresolved identity']}))
+        state = review_status(self.root)
+        self.assertEqual(state['status'], 'invalidated')
+        self.assertFalse(state['valid'])
+        self.assertIn('Approval blocked', state['reason'])
+
     def test_cli_record_status_and_import(self):
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
